@@ -138,6 +138,7 @@ startBtn.addEventListener('click', async () => {
   for (let i = 0; i < frameCount; i++) {
     await runCountdown();
     takeSnap();
+    updateStripPreview(); // Refresh preview after each shot
   }
 
   retakeBtn.classList.remove('hidden');
@@ -193,7 +194,6 @@ function takeSnap() {
 
   applyFilter(sCtx, currentFilter, snapCanvas.width, snapCanvas.height);
   capturedPhotos.push(snapCanvas.toDataURL('image/png'));
-  updateStripPreview();
 }
 
 // Helper function to draw images without stretching (mimics CSS object-fit: cover)
@@ -234,7 +234,7 @@ function drawImageProp(ctx, img, x, y, w, h) {
   ctx.restore();
 }
 
-// Draw Photo Strip Preview with Non-Stretched Shapes & Themes
+// Draw Photo Strip Preview with Preloaded Async Images
 function updateStripPreview() {
   const width = 600;
   const padding = 36;
@@ -276,8 +276,10 @@ function updateStripPreview() {
   ctxStrip.font = '600 18px "Quicksand", sans-serif';
   ctxStrip.fillText(captionInput.value || '✨ BESTIES 2026 ✨', width / 2, padding + 70);
 
-  // Draw Photos
+  // Draw Photos & Placeholders
   let startY = padding + headerH;
+  let loadedCount = 0;
+
   for (let i = 0; i < frameCount; i++) {
     const photoX = padding;
     const photoY = startY;
@@ -285,8 +287,15 @@ function updateStripPreview() {
     if (capturedPhotos[i]) {
       const img = new Image();
       img.src = capturedPhotos[i];
-      // Draw non-stretched image with cover property
-      drawImageProp(ctxStrip, img, photoX, photoY, photoW, photoH);
+      img.onload = () => {
+        drawImageProp(ctxStrip, img, photoX, photoY, photoW, photoH);
+        drawBorder(photoX, photoY, photoW, photoH);
+      };
+      // Fallback immediate draw if already cached
+      if (img.complete) {
+        drawImageProp(ctxStrip, img, photoX, photoY, photoW, photoH);
+        drawBorder(photoX, photoY, photoW, photoH);
+      }
     } else {
       ctxStrip.save();
       ctxStrip.beginPath();
@@ -299,14 +308,8 @@ function updateStripPreview() {
       ctxStrip.textAlign = 'center';
       ctxStrip.fillText(`Pose ${i + 1} 📸`, photoX + photoW/2, photoY + photoH/2 + 8);
       ctxStrip.restore();
+      drawBorder(photoX, photoY, photoW, photoH);
     }
-
-    // Subtle Photo Frame Border
-    ctxStrip.strokeStyle = '#ffb3c6';
-    ctxStrip.lineWidth = 4;
-    ctxStrip.beginPath();
-    ctxStrip.roundRect(photoX, photoY, photoW, photoH, 18);
-    ctxStrip.stroke();
 
     startY += photoH + spacing;
   }
@@ -316,6 +319,14 @@ function updateStripPreview() {
   ctxStrip.font = '600 14px "Quicksand", sans-serif';
   ctxStrip.textAlign = 'center';
   ctxStrip.fillText('© 2026 Aura Studio • Made with 💖', width / 2, totalHeight - padding + 25);
+}
+
+function drawBorder(x, y, w, h) {
+  ctxStrip.strokeStyle = '#ffb3c6';
+  ctxStrip.lineWidth = 4;
+  ctxStrip.beginPath();
+  ctxStrip.roundRect(x, y, w, h, 18);
+  ctxStrip.stroke();
 }
 
 function drawHeartPath(ctx, x, y, w, h) {
