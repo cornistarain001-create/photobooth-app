@@ -1,338 +1,356 @@
-const video = document.getElementById('webcam');
-const stripCanvas = document.getElementById('strip-canvas');
-const ctx = stripCanvas.getContext('2d');
-const flashOverlay = document.getElementById('flash-overlay');
-const countdownDisplay = document.getElementById('countdown-display');
-const poseBadge = document.getElementById('pose-badge');
-const currentPoseEl = document.getElementById('current-pose');
-const totalPosesEl = document.getElementById('total-poses');
-const startCaptureBtn = document.getElementById('start-capture-btn');
-const outputActions = document.getElementById('output-actions');
-const emptyPlaceholder = document.getElementById('empty-strip-placeholder');
-const saveStatus = document.getElementById('save-status');
+const video = document.getElementById('video');
+const overlayCanvas = document.getElementById('overlayCanvas');
+const ctxOverlay = overlayCanvas.getContext('2d');
+const stripCanvas = document.getElementById('stripCanvas');
+const ctxStrip = stripCanvas.getContext('2d');
 
-// State
-let selectedStripCount = 4; // Default 4, max 8
-let selectedFilter = 'none';
-let selectedTheme = 'classic-white';
-let isMirrored = true;
-let isCapturing = false;
-let latestSavedUrl = '';
+const startBtn = document.getElementById('startBtn');
+const retakeBtn = document.getElementById('retakeBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const printBtn = document.getElementById('printBtn');
+const countdownEl = document.getElementById('countdown');
+const flashEl = document.getElementById('flash');
+const captionInput = document.getElementById('captionInput');
 
-const THEMES = {
-  'classic-white': { bg: '#ffffff', text: '#111827', border: '#e5e7eb' },
-  'midnight-matte': { bg: '#121318', text: '#f8fafc', border: '#27272a' },
-  'pastel-blush': { bg: '#ffe4ec', text: '#831843', border: '#fbcfe8' },
-  'cyber-lime': { bg: '#ecfccb', text: '#1a2e05', border: '#bef264' }
-};
+// State options
+let frameCount = 4;
+let currentShape = 'rounded';
+let currentSticker = 'none';
+let currentFilter = 'none';
+let currentTheme = 'cream';
+let capturedPhotos = [];
+let animId = null;
 
-// 1. Initialize Webcam
+// Initialize WebRTC Camera
 async function initCamera() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 960 }, facingMode: 'user' },
-      audio: false
-    });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: false });
     video.srcObject = stream;
-    document.getElementById('camera-error').classList.add('hidden');
+    video.play();
+    video.onloadedmetadata = () => {
+      overlayCanvas.width = video.videoWidth;
+      overlayCanvas.height = video.videoHeight;
+      startStickerAnimation();
+    };
   } catch (err) {
-    console.error('Camera access denied:', err);
-    document.getElementById('camera-error').classList.remove('hidden');
+    alert('Unable to access camera. Please allow webcam permissions!');
+    console.error(err);
   }
 }
 
-// 2. Strip Count Selection (1 to 8)
-document.querySelectorAll('#strip-selector .num-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    if (isCapturing) return;
-    document.querySelectorAll('#strip-selector .num-btn').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedStripCount = Math.min(8, Math.max(1, parseInt(btn.dataset.count, 10)));
+// UI Pill Selectors Handlers
+function setupPillGroup(containerId, callback) {
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.pill, .swatch').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      container.querySelectorAll('.pill, .swatch').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      callback(e.currentTarget);
+      updateStripPreview();
+    });
   });
+}
+
+setupPillGroup('frameCountGroup', (btn) => { frameCount = parseInt(btn.dataset.count); });
+setupPillGroup('shapeGroup', (btn) => { currentShape = btn.dataset.shape; });
+setupPillGroup('stickerGroup', (btn) => { currentSticker = btn.dataset.sticker; });
+setupPillGroup('filterGroup', (btn) => { currentFilter = btn.dataset.filter; });
+setupPillGroup('themeGroup', (btn) => { currentTheme = btn.dataset.theme; });
+
+captionInput.addEventListener('input', () => updateStripPreview());
+
+// Live Kawaii Stickers / Face Overlays Animation Loop
+function startStickerAnimation() {
+  function renderLoop() {
+    ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    
+    if (currentSticker !== 'none') {
+      ctxOverlay.save();
+      ctxOverlay.font = '72px sans-serif';
+      ctxOverlay.textAlign = 'center';
+      
+      const cx = overlayCanvas.width / 2;
+      const cy = overlayCanvas.height / 2 - 80;
+
+      if (currentSticker === 'cat') {
+        ctxOverlay.fillText('🐱', cx - 110, cy - 60);
+        ctxOverlay.fillText('🐱', cx + 110, cy - 60);
+        ctxOverlay.font = '36px sans-serif';
+        ctxOverlay.fillText('🐾', cx - 140, cy + 20);
+      } else if (currentSticker === 'bunny') {
+        ctxOverlay.fillText('🐰', cx - 100, cy - 90);
+        ctxOverlay.fillText('🐰', cx + 100, cy - 90);
+      } else if (currentSticker === 'bear') {
+        ctxOverlay.fillText('🧸', cx - 110, cy - 80);
+        ctxOverlay.fillText('🧸', cx + 110, cy - 80);
+      } else if (currentSticker === 'blush') {
+        ctxOverlay.font = '50px sans-serif';
+        ctxOverlay.fillText('🌸', cx - 90, cy + 30);
+        ctxOverlay.fillText('🌸', cx + 90, cy + 30);
+      } else if (currentSticker === 'crown') {
+        ctxOverlay.fillText('👑', cx, cy - 110);
+      } else if (currentSticker === 'bow') {
+        ctxOverlay.fillText('🎀', cx + 80, cy - 90);
+      } else if (currentSticker === 'sparkles') {
+        const time = Date.now() / 300;
+        ctxOverlay.font = '45px sans-serif';
+        ctxOverlay.fillText('✨', cx - 120 + Math.sin(time) * 15, cy - 50);
+        ctxOverlay.fillText('⭐', cx + 120 + Math.cos(time) * 15, cy - 20);
+        ctxOverlay.fillText('💖', cx, cy - 120);
+      }
+      ctxOverlay.restore();
+    }
+    animId = requestAnimationFrame(renderLoop);
+  }
+  renderLoop();
+}
+
+// Apply Filter Styles on Canvas Context
+function applyFilter(context, filterName, width, height) {
+  if (filterName === 'peach') {
+    context.fillStyle = 'rgba(255, 160, 122, 0.18)';
+    context.fillRect(0, 0, width, height);
+  } else if (filterName === 'strawberry') {
+    context.fillStyle = 'rgba(255, 105, 180, 0.18)';
+    context.fillRect(0, 0, width, height);
+  } else if (filterName === 'dreamy') {
+    context.fillStyle = 'rgba(186, 150, 255, 0.22)';
+    context.fillRect(0, 0, width, height);
+  } else if (filterName === 'mint') {
+    context.fillStyle = 'rgba(135, 235, 190, 0.16)';
+    context.fillRect(0, 0, width, height);
+  } else if (filterName === 'sunset') {
+    context.fillStyle = 'rgba(255, 180, 50, 0.18)';
+    context.fillRect(0, 0, width, height);
+  } else if (filterName === 'vintage') {
+    context.fillStyle = 'rgba(120, 80, 40, 0.2)';
+    context.fillRect(0, 0, width, height);
+  } else if (filterName === 'bw') {
+    context.filter = 'grayscale(100%) contrast(110%)';
+  }
+}
+
+// Capture Sequence with Countdown
+startBtn.addEventListener('click', async () => {
+  startBtn.classList.add('hidden');
+  capturedPhotos = [];
+  
+  for (let i = 0; i < frameCount; i++) {
+    await runCountdown();
+    takeSnap();
+  }
+
+  retakeBtn.classList.remove('hidden');
+  downloadBtn.disabled = false;
+  printBtn.disabled = false;
+  updateStripPreview();
 });
 
-// 3. Filter Selection
-document.querySelectorAll('#filter-chips .chip').forEach((chip) => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('#filter-chips .chip').forEach((c) => c.classList.remove('active'));
-    chip.classList.add('active');
-    selectedFilter = chip.dataset.filter;
-    video.style.filter = selectedFilter;
-  });
+retakeBtn.addEventListener('click', () => {
+  capturedPhotos = [];
+  retakeBtn.classList.add('hidden');
+  startBtn.classList.remove('hidden');
+  downloadBtn.disabled = true;
+  printBtn.disabled = true;
+  updateStripPreview();
 });
 
-// 4. Theme Selection
-document.querySelectorAll('#theme-selector .theme-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#theme-selector .theme-btn').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedTheme = btn.dataset.theme;
-  });
-});
-
-// 5. Mirror Toggle
-document.getElementById('toggle-mirror-btn').addEventListener('click', (e) => {
-  isMirrored = !isMirrored;
-  video.classList.toggle('unmirrored', !isMirrored);
-  e.target.textContent = `🪞 Mirror: ${isMirrored ? 'ON' : 'OFF'}`;
-});
-
-// Helper: Countdown timer
-function runCountdown(seconds = 3) {
+function runCountdown() {
   return new Promise((resolve) => {
-    countdownDisplay.classList.remove('hidden');
-    let remaining = seconds;
-    countdownDisplay.textContent = remaining;
-
+    let count = 3;
+    countdownEl.textContent = count;
+    countdownEl.classList.remove('hidden');
+    
     const timer = setInterval(() => {
-      remaining -= 1;
-      if (remaining > 0) {
-        countdownDisplay.textContent = remaining;
+      count--;
+      if (count > 0) {
+        countdownEl.textContent = count;
       } else {
         clearInterval(timer);
-        countdownDisplay.classList.add('hidden');
+        countdownEl.classList.add('hidden');
+        triggerFlash();
         resolve();
       }
     }, 1000);
   });
 }
 
-// Helper: Shutter Flash Effect
 function triggerFlash() {
-  flashOverlay.classList.add('active');
-  setTimeout(() => flashOverlay.classList.remove('active'), 160);
+  flashEl.classList.add('active');
+  setTimeout(() => flashEl.classList.remove('active'), 200);
 }
 
-// Helper: Capture Single Frame onto offscreen canvas
-function captureSingleFrame() {
-  const frameCanvas = document.createElement('canvas');
-  const w = video.videoWidth || 1280;
-  const h = video.videoHeight || 960;
-  frameCanvas.width = w;
-  frameCanvas.height = h;
-  const fCtx = frameCanvas.getContext('2d');
+function takeSnap() {
+  const snapCanvas = document.createElement('canvas');
+  snapCanvas.width = video.videoWidth;
+  snapCanvas.height = video.videoHeight;
+  const sCtx = snapCanvas.getContext('2d');
+  
+  sCtx.save();
+  sCtx.scale(-1, 1);
+  sCtx.drawImage(video, -snapCanvas.width, 0, snapCanvas.width, snapCanvas.height);
+  sCtx.restore();
 
-  fCtx.filter = selectedFilter;
-
-  if (isMirrored) {
-    fCtx.translate(w, 0);
-    fCtx.scale(-1, 1);
-  }
-  fCtx.drawImage(video, 0, 0, w, h);
-  return frameCanvas;
+  applyFilter(sCtx, currentFilter, snapCanvas.width, snapCanvas.height);
+  capturedPhotos.push(snapCanvas.toDataURL('image/png'));
+  updateStripPreview();
 }
 
-// 6. Main Multi-Frame Capture Sequence
-startCaptureBtn.addEventListener('click', async () => {
-  if (isCapturing || !video.srcObject) return;
+// Helper function to draw images without stretching (mimics CSS object-fit: cover)
+function drawImageProp(ctx, img, x, y, w, h) {
+  const imgW = img.naturalWidth || img.width;
+  const imgH = img.naturalHeight || img.height;
+  const targetAspect = w / h;
+  const imgAspect = imgW / imgH;
 
-  isCapturing = true;
-  startCaptureBtn.disabled = true;
-  outputActions.classList.add('hidden');
-  poseBadge.classList.remove('hidden');
-  totalPosesEl.textContent = selectedStripCount;
+  let renderW, renderH, offsetX = 0, offsetY = 0;
 
-  const capturedFrames = [];
-
-  for (let i = 1; i <= selectedStripCount; i++) {
-    currentPoseEl.textContent = i;
-    await runCountdown(3);
-    triggerFlash();
-    capturedFrames.push(captureSingleFrame());
-    await new Promise((r) => setTimeout(r, 450));
+  if (imgAspect > targetAspect) {
+    renderH = h;
+    renderW = imgW * (h / imgH);
+    offsetX = (w - renderW) / 2;
+  } else {
+    renderW = w;
+    renderH = imgH * (w / imgW);
+    offsetY = (h - renderH) / 2;
   }
 
-  poseBadge.classList.add('hidden');
-  await renderAndSaveStrip(capturedFrames);
+  ctx.save();
+  ctx.beginPath();
+  if (currentShape === 'heart') {
+    drawHeartPath(ctx, x, y, w, h);
+  } else if (currentShape === 'circle') {
+    ctx.arc(x + w/2, y + h/2, Math.min(w, h)/2, 0, Math.PI * 2);
+  } else if (currentShape === 'pill') {
+    ctx.roundRect(x, y, w, h, h / 2);
+  } else if (currentShape === 'scallop' || currentShape === 'star') {
+    ctx.roundRect(x, y, w, h, 40);
+  } else {
+    ctx.roundRect(x, y, w, h, 18);
+  }
+  ctx.clip();
 
-  isCapturing = false;
-  startCaptureBtn.disabled = false;
-});
+  ctx.drawImage(img, x + offsetX, y + offsetY, renderW, renderH);
+  ctx.restore();
+}
 
-// 7. Stitch Frames into Vertical Photo Strip & Save to SQLite
-async function renderAndSaveStrip(frames) {
-  const theme = THEMES[selectedTheme] || THEMES['classic-white'];
-  const caption = document.getElementById('strip-caption').value.trim() || 'AURA STUDIO • 2026';
-  const dateStamp = new Date().toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
-
-  const frameWidth = 600;
-  const frameHeight = 450;
+// Draw Photo Strip Preview with Non-Stretched Shapes & Themes
+function updateStripPreview() {
+  const width = 600;
   const padding = 36;
-  const gap = 24;
-  const footerHeight = 110;
+  const photoW = width - (padding * 2);
+  const photoH = Math.round(photoW * 0.75);
+  const headerH = 110;
+  const footerH = 70;
+  const spacing = 20;
 
-  const totalWidth = frameWidth + padding * 2;
-  const totalHeight =
-    padding + frames.length * frameHeight + (frames.length - 1) * gap + footerHeight;
-
-  stripCanvas.width = totalWidth;
+  const totalHeight = headerH + (frameCount * photoH) + ((frameCount - 1) * spacing) + footerH + (padding * 2);
+  stripCanvas.width = width;
   stripCanvas.height = totalHeight;
 
-  // Strip Background
-  ctx.fillStyle = theme.bg;
-  ctx.fillRect(0, 0, totalWidth, totalHeight);
-
-  // Draw each captured photo
-  frames.forEach((frame, index) => {
-    const yPos = padding + index * (frameHeight + gap);
-    ctx.drawImage(frame, padding, yPos, frameWidth, frameHeight);
-
-    // Subtle frame border
-    ctx.strokeStyle = theme.border;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(padding, yPos, frameWidth, frameHeight);
-  });
-
-  // Footer Typography
-  ctx.fillStyle = theme.text;
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 26px "Plus Jakarta Sans", sans-serif';
-  ctx.fillText(caption.toUpperCase(), totalWidth / 2, totalHeight - 52);
-
-  ctx.font = '16px "Space Mono", monospace';
-  ctx.globalAlpha = 0.7;
-  ctx.fillText(`${dateStamp} • ${frames.length} STRIP EDITION`, totalWidth / 2, totalHeight - 24);
-  ctx.globalAlpha = 1.0;
-
-  // Show Canvas in UI
-  emptyPlaceholder.classList.add('hidden');
-  stripCanvas.style.display = 'block';
-  outputActions.classList.remove('hidden');
-
-  // Persist to Backend SQLite Database
-  const dataUrl = stripCanvas.toDataURL('image/png');
-  saveStatus.textContent = 'Saving to DB...';
-
-  try {
-    const response = await fetch('/api/strips', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        imageData: dataUrl,
-        stripCount: selectedStripCount,
-        filterUsed: selectedFilter,
-        themeUsed: selectedTheme,
-        caption
-      })
-    });
-
-    const result = await response.json();
-    if (response.ok) {
-      saveStatus.textContent = 'Saved to DB ✓';
-      latestSavedUrl = `${window.location.origin}${result.imageUrl}`;
-      loadGalleryCount();
-    } else {
-      saveStatus.textContent = 'Save Error';
-    }
-  } catch (err) {
-    console.error('Database save failed:', err);
-    saveStatus.textContent = 'Offline Mode';
+  // Background Theme Fill
+  if (currentTheme === 'pink') {
+    ctxStrip.fillStyle = '#FFD6E0';
+  } else if (currentTheme === 'lavender') {
+    ctxStrip.fillStyle = '#E2D4F0';
+  } else if (currentTheme === 'mint') {
+    ctxStrip.fillStyle = '#D4F4E7';
+  } else if (currentTheme === 'butter') {
+    ctxStrip.fillStyle = '#FFF3B0';
+  } else if (currentTheme === 'peach') {
+    ctxStrip.fillStyle = '#FFE5D9';
+  } else if (currentTheme === 'gingham') {
+    ctxStrip.fillStyle = '#FFE5EC';
+  } else {
+    ctxStrip.fillStyle = '#FFFDF9'; // Cream
   }
+  ctxStrip.fillRect(0, 0, width, totalHeight);
+
+  // Draw Header Branding
+  ctxStrip.fillStyle = '#ff5c8a';
+  ctxStrip.font = '700 28px "Fredoka", sans-serif';
+  ctxStrip.textAlign = 'center';
+  ctxStrip.fillText('✨ AURA STUDIO ✨', width / 2, padding + 35);
+
+  ctxStrip.fillStyle = '#8a798f';
+  ctxStrip.font = '600 18px "Quicksand", sans-serif';
+  ctxStrip.fillText(captionInput.value || '✨ BESTIES 2026 ✨', width / 2, padding + 70);
+
+  // Draw Photos
+  let startY = padding + headerH;
+  for (let i = 0; i < frameCount; i++) {
+    const photoX = padding;
+    const photoY = startY;
+
+    if (capturedPhotos[i]) {
+      const img = new Image();
+      img.src = capturedPhotos[i];
+      // Draw non-stretched image with cover property
+      drawImageProp(ctxStrip, img, photoX, photoY, photoW, photoH);
+    } else {
+      ctxStrip.save();
+      ctxStrip.beginPath();
+      ctxStrip.roundRect(photoX, photoY, photoW, photoH, 18);
+      ctxStrip.clip();
+      ctxStrip.fillStyle = '#ffeef2';
+      ctxStrip.fillRect(photoX, photoY, photoW, photoH);
+      ctxStrip.fillStyle = '#ffb3c6';
+      ctxStrip.font = '600 22px "Fredoka", sans-serif';
+      ctxStrip.textAlign = 'center';
+      ctxStrip.fillText(`Pose ${i + 1} 📸`, photoX + photoW/2, photoY + photoH/2 + 8);
+      ctxStrip.restore();
+    }
+
+    // Subtle Photo Frame Border
+    ctxStrip.strokeStyle = '#ffb3c6';
+    ctxStrip.lineWidth = 4;
+    ctxStrip.beginPath();
+    ctxStrip.roundRect(photoX, photoY, photoW, photoH, 18);
+    ctxStrip.stroke();
+
+    startY += photoH + spacing;
+  }
+
+  // Footer Timestamp / Watermark
+  ctxStrip.fillStyle = '#b09eb3';
+  ctxStrip.font = '600 14px "Quicksand", sans-serif';
+  ctxStrip.textAlign = 'center';
+  ctxStrip.fillText('© 2026 Aura Studio • Made with 💖', width / 2, totalHeight - padding + 25);
 }
 
-// 8. Download Button
-document.getElementById('download-btn').addEventListener('click', () => {
+function drawHeartPath(ctx, x, y, w, h) {
+  const d = Math.min(w, h);
+  ctx.save();
+  ctx.translate(x + w / 2, y + h / 2);
+  ctx.moveTo(0, d / 4);
+  ctx.bezierCurveTo(d / 2, -d / 2, d, d / 3, 0, d / 2);
+  ctx.bezierCurveTo(-d, d / 3, -d / 2, -d / 2, 0, d / 4);
+  ctx.restore();
+}
+
+// Download Button Handler
+downloadBtn.addEventListener('click', () => {
   const link = document.createElement('a');
-  link.download = `aura-photostrip-${selectedStripCount}frames-${Date.now()}.png`;
+  link.download = `aura-studio-${Date.now()}.png`;
   link.href = stripCanvas.toDataURL('image/png');
   link.click();
 });
 
-// 9. Print Button
-document.getElementById('print-btn').addEventListener('click', () => {
-  const printImg = document.getElementById('print-image');
-  printImg.src = stripCanvas.toDataURL('image/png');
-  printImg.onload = () => {
-    window.print();
-  };
+// Print Button Handler
+printBtn.addEventListener('click', () => {
+  const dataUrl = stripCanvas.toDataURL('image/png');
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html>
+      <head><title>Print Photo Strip</title></head>
+      <body style="text-align:center; background:#fff; margin:0; padding:20px;">
+        <img src="${dataUrl}" style="max-height:95vh;" onload="window.print();window.close();"/>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
 });
 
-// 10. QR Share Modal
-document.getElementById('qr-btn').addEventListener('click', () => {
-  const qrBox = document.getElementById('qrcode-box');
-  qrBox.innerHTML = '';
-  const shareTarget = latestSavedUrl || window.location.href;
-  new QRCode(qrBox, {
-    text: shareTarget,
-    width: 200,
-    height: 200
-  });
-  document.getElementById('qr-modal').classList.remove('hidden');
-});
-
-document.getElementById('close-qr-btn').addEventListener('click', () => {
-  document.getElementById('qr-modal').classList.add('hidden');
-});
-
-// 11. Retake / Reset
-document.getElementById('retake-btn').addEventListener('click', () => {
-  stripCanvas.style.display = 'none';
-  emptyPlaceholder.classList.remove('hidden');
-  outputActions.classList.add('hidden');
-  saveStatus.textContent = 'Ready';
-});
-
-// 12. Database Event Gallery
-async function loadGallery() {
-  const grid = document.getElementById('gallery-grid');
-  grid.innerHTML = '<p>Loading saved strips...</p>';
-
-  const res = await fetch('/api/strips');
-  const strips = await res.json();
-  document.getElementById('gallery-count').textContent = strips.length;
-
-  if (!strips.length) {
-    grid.innerHTML = '<p>No photo strips captured yet.</p>';
-    return;
-  }
-
-  grid.innerHTML = strips
-    .map(
-      (item) => `
-      <div class="gallery-item">
-        <img src="${item.image_url}" alt="Photo Strip" loading="lazy" />
-        <small style="color:#94a3b8;font-size:0.75rem;">${item.strip_count} Frames • ${new Date(item.created_at).toLocaleDateString()}</small>
-        <div class="gallery-item-actions">
-          <a href="${item.image_url}" download="strip_${item.id}.png" style="flex:1;text-decoration:none;">
-            <button style="width:100%;background:#22c55e;color:#052e16;">Download</button>
-          </a>
-          <button onclick="printSavedStrip('${item.image_url}')" style="background:#fff;color:#000;">Print</button>
-        </div>
-      </div>
-    `
-    )
-    .join('');
-}
-
-async function loadGalleryCount() {
-  try {
-    const res = await fetch('/api/strips');
-    const strips = await res.json();
-    document.getElementById('gallery-count').textContent = strips.length;
-  } catch (e) {}
-}
-
-window.printSavedStrip = function (url) {
-  const printImg = document.getElementById('print-image');
-  printImg.src = url;
-  printImg.onload = () => window.print();
-};
-
-document.getElementById('open-gallery-btn').addEventListener('click', () => {
-  document.getElementById('gallery-modal').classList.remove('hidden');
-  loadGallery();
-});
-
-document.getElementById('close-gallery-btn').addEventListener('click', () => {
-  document.getElementById('gallery-modal').classList.add('hidden');
-});
-
-document.getElementById('retry-cam-btn').addEventListener('click', initCamera);
-
-// Boot
+// Initialize on Load
 initCamera();
-loadGalleryCount();
+updateStripPreview();
