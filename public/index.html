@@ -12,7 +12,7 @@
     <header class="cute-header">
       <div class="badge">🌸 AURA STUDIO 2026 🌸</div>
       <h1>✨ Aura Studio ✨</h1>
-      <p>Strike a pose with cute stickers, filters, & custom shapes!</p>
+      <p>Strike a pose with cute stickers, filters, & aesthetic frame designs!</p>
     </header>
 
     <main class="bento-grid">
@@ -31,7 +31,7 @@
         </div>
       </section>
 
-      <!-- Middle Column: Extended Customization Controls (50+ Options) -->
+      <!-- Middle Column: Customization Controls -->
       <section class="card controls-card">
         <!-- 1. Frame Count -->
         <div class="control-group">
@@ -59,48 +59,55 @@
           </div>
         </div>
 
-        <!-- 3. Face Stickers & Effects -->
+        <!-- 3. Artistic Frame Designs (15 Options) -->
         <div class="control-group">
-          <label>🎀 3. Kawaii Face Stickers</label>
+          <label>🎞️ 3. Artistic Frame Designs (15 Styles)</label>
+          <div class="pill-grid scrollable-pills" id="frameDesignGroup">
+            <button class="pill active" data-frame="classic">✨ Clean Pastel</button>
+            <button class="pill" data-frame="camera">📷 Vintage Camera</button>
+            <button class="pill" data-frame="wine_seal">🍷 Wine Wax Seal</button>
+            <button class="pill" data-frame="snoopy_love">💌 Cupid & Bows</button>
+            <button class="pill" data-frame="disco_pink">🪩 Disco Pink Star</button>
+            <button class="pill" data-frame="story_love">🌹 Story of Love</button>
+            <button class="pill" data-frame="news_pin">📌 Newspaper & Pin</button>
+            <button class="pill" data-frame="letter_check">📜 Letter & Gingham</button>
+            <button class="pill" data-frame="film_noir">🎞️ Classic Film Roll</button>
+            <button class="pill" data-frame="cherry_blush">🍒 Cherry Milk</button>
+            <button class="pill" data-frame="lavender_dream">☁️ Lilac Stardust</button>
+            <button class="pill" data-frame="matcha_pantry">🌿 Matcha Journal</button>
+            <button class="pill" data-frame="golden_hour">🌅 Golden Hour Journal</button>
+            <button class="pill" data-frame="teddy_hug">🧸 Bear Hug Aesthetic</button>
+            <button class="pill" data-frame="midnight_star">🌙 Midnight Starlight</button>
+          </div>
+        </div>
+
+        <!-- 4. Face Stickers & Effects -->
+        <div class="control-group">
+          <label>🎀 4. Kawaii Face Stickers</label>
           <div class="pill-grid" id="stickerGroup">
             <button class="pill active" data-sticker="none">Plain</button>
-            <button class="pill" data-sticker="cat">🐱 Kitty Ears</button>
-            <button class="pill" data-sticker="bunny">🐰 Bunny Ears</button>
-            <button class="pill" data-sticker="bear">🧸 Teddy Ears</button>
-            <button class="pill" data-sticker="blush">🌸 Rosy Blush</button>
+            <button class="pill" data-sticker="cat">🐱 Kitty</button>
+            <button class="pill" data-sticker="bunny">🐰 Bunny</button>
+            <button class="pill" data-sticker="bear">🧸 Teddy</button>
+            <button class="pill" data-sticker="blush">🌸 Blush</button>
             <button class="pill" data-sticker="crown">👑 Tiara</button>
-            <button class="pill" data-sticker="bow">🎀 Hair Bow</button>
-            <button class="pill" data-sticker="sparkles">✨ Magic Sparkles</button>
+            <button class="pill" data-sticker="bow">🎀 Bow</button>
+            <button class="pill" data-sticker="sparkles">✨ Sparkles</button>
           </div>
         </div>
 
-        <!-- 4. Aesthetic Color Filters -->
+        <!-- 5. Aesthetic Color Filters -->
         <div class="control-group">
-          <label>🎨 4. Camera & Strip Filter</label>
+          <label>🎨 5. Camera & Strip Filter</label>
           <div class="pill-grid" id="filterGroup">
             <button class="pill active" data-filter="none">Natural</button>
-            <button class="pill" data-filter="peach">🍑 Peachy Glow</button>
-            <button class="pill" data-filter="strawberry">🍓 Berry Milk</button>
-            <button class="pill" data-filter="dreamy">☁️ Lavender Dream</button>
-            <button class="pill" data-filter="mint">🌿 Matcha Mint</button>
-            <button class="pill" data-filter="sunset">🌅 Golden Hour</button>
-            <button class="pill" data-filter="vintage">🧸 Retro Polaroid</button>
-            <button class="pill" data-filter="bw">🐼 Soft Mono</button>
-          </div>
-        </div>
-
-        <!-- 5. Strip Paper Themes & Patterns -->
-        <div class="control-group">
-          <label>🍰 5. Strip Paper Theme</label>
-          <div class="swatch-grid" id="themeGroup">
-            <button class="swatch active" data-theme="cream" style="background:#FFFDF9;" title="Vanilla Cream"></button>
-            <button class="swatch" data-theme="pink" style="background:#FFD6E0;" title="Strawberry Milk"></button>
-            <button class="swatch" data-theme="lavender" style="background:#E2D4F0;" title="Lilac Dream"></button>
-            <button class="swatch" data-theme="mint" style="background:#D4F4E7;" title="Matcha Mint"></button>
-            <button class="swatch" data-theme="butter" style="background:#FFF3B0;" title="Lemon Butter"></button>
-            <button class="swatch" data-theme="peach" style="background:#FFE5D9;" title="Peach Sorbet"></button>
-            <button class="swatch" data-theme="gingham" style="background:repeating-linear-gradient(45deg,#FFE5EC,#FFE5EC 8px,#FFC2D1 8px,#FFC2D1 16px);" title="Pink Gingham"></button>
-            <button class="swatch" data-theme="stars" style="background:radial-gradient(#ffb3c6 15%, transparent 16%) 0 0/12px 12px, #fffdf9;" title="Polka Dot Stars"></button>
+            <button class="pill" data-filter="peach">🍑 Peachy</button>
+            <button class="pill" data-filter="strawberry">🍓 Berry</button>
+            <button class="pill" data-filter="dreamy">☁️ Dreamy</button>
+            <button class="pill" data-filter="mint">🌿 Mint</button>
+            <button class="pill" data-filter="sunset">🌅 Sunset</button>
+            <button class="pill" data-filter="vintage">🧸 Retro</button>
+            <button class="pill" data-filter="bw">🐼 Mono</button>
           </div>
         </div>
 
