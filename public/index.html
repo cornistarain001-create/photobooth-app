@@ -3,87 +3,96 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>✨ Aura Studio ✨</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <title>Aura Studio | Photobooth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,600;1,9..144,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app-container">
-    <header class="cute-header">
-      <div class="badge">🌸 AURA STUDIO 2026 🌸</div>
-      <h1>✨ Aura Studio ✨</h1>
-      <p>Strike a pose with cute stickers, filters, & aesthetic frame designs!</p>
-    </header>
+  <header class="site-header">
+    <button class="brand" data-nav="home" aria-label="Aura Studio, go to home">Aura Studio</button>
+    <nav class="nav" aria-label="Main">
+      <button class="nav-btn active" data-nav="home">Home</button>
+      <button class="nav-btn" id="contactBtn" data-contact>Contact</button>
+    </nav>
+  </header>
 
-    <main class="bento-grid">
-      <!-- Left Column: Live Camera & Countdown -->
-      <section class="card camera-card">
-        <div class="camera-wrapper" id="cameraWrapper">
-          <video id="video" autoplay playsinline></video>
-          <canvas id="overlayCanvas"></canvas>
-          <div id="countdown" class="countdown hidden">3</div>
-          <div id="flash" class="flash"></div>
+  <!-- HOME -->
+  <main id="homeView" class="view home">
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Pose, pick a frame, keep the strip.</h1>
+        <p class="lead">Aura Studio is a photobooth that runs in your browser. Choose a scrapbook frame, add a face sticker and a filter, then save or print your strip. Your photos stay on your device.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" data-go="booth">Open the photobooth</button>
+          <button class="btn btn-ghost" data-contact>Contact</button>
         </div>
+        <ol class="steps">
+          <li><strong>Pick a frame</strong><span>Eight scrapbook layouts and eight classic strips.</span></li>
+          <li><strong>Strike a pose</strong><span>A 3-2-1 countdown snaps each cut for you.</span></li>
+          <li><strong>Save or print</strong><span>Download a PNG or send it to your printer.</span></li>
+        </ol>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <canvas id="heroStripA" class="hero-strip a"></canvas>
+        <canvas id="heroStripB" class="hero-strip b"></canvas>
+      </div>
+    </section>
+  </main>
 
-        <div class="camera-controls">
-          <button id="startBtn" class="btn-primary">📸 Start Photo Session</button>
-          <button id="retakeBtn" class="btn-secondary hidden">🔄 Retake Photos</button>
+  <!-- PHOTOBOOTH -->
+  <main id="boothView" class="view booth hidden">
+    <div class="booth-grid">
+      <section class="panel camera-panel" aria-label="Camera">
+        <div class="polaroid">
+          <div class="camera-wrapper" id="cameraWrapper">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="overlayCanvas"></canvas>
+            <div id="countdown" class="countdown hidden" role="status" aria-live="assertive">3</div>
+            <div id="flash" class="flash"></div>
+          </div>
+          <p id="cameraMsg" class="camera-msg hidden" role="alert"></p>
+          <div class="camera-controls">
+            <button id="startBtn" class="btn btn-primary">Start photo session</button>
+            <button id="retakeBtn" class="btn btn-ghost hidden">Retake photos</button>
+          </div>
         </div>
       </section>
 
-      <!-- Middle Column: Customization Controls -->
-      <section class="card controls-card">
-        <!-- 1. Frame Count -->
+      <section class="panel controls-panel" aria-label="Customize">
         <div class="control-group">
-          <label>🎞️ 1. Strip Frame Count</label>
-          <div class="pill-grid" id="frameCountGroup">
-            <button class="pill" data-count="1">1 Cut</button>
-            <button class="pill" data-count="2">2 Cuts</button>
-            <button class="pill" data-count="3">3 Cuts</button>
-            <button class="pill active" data-count="4">4 Cuts</button>
-            <button class="pill" data-count="6">6 Cuts</button>
-            <button class="pill" data-count="8">8 Cuts</button>
-          </div>
+          <h2>Frame</h2>
+          <div class="tile-grid" id="frameDesignGroup"></div>
         </div>
 
-        <!-- 2. Photo Cutout Shapes -->
         <div class="control-group">
-          <label>💖 2. Frame Cutout Shape</label>
+          <h2>Cuts</h2>
+          <div class="pill-grid" id="frameCountGroup">
+            <button class="pill" data-count="1">1 cut</button>
+            <button class="pill" data-count="2">2 cuts</button>
+            <button class="pill" data-count="3">3 cuts</button>
+            <button class="pill" data-count="4">4 cuts</button>
+            <button class="pill" data-count="6">6 cuts</button>
+            <button class="pill" data-count="8">8 cuts</button>
+          </div>
+          <p class="hint" id="cutNote"></p>
+        </div>
+
+        <div class="control-group">
+          <h2>Cutout shape</h2>
           <div class="pill-grid" id="shapeGroup">
             <button class="pill active" data-shape="rounded">Rounded</button>
-            <button class="pill" data-shape="heart">Heart ♡</button>
-            <button class="pill" data-shape="circle">Circle ○</button>
-            <button class="pill" data-shape="pill">Pill 💊</button>
-            <button class="pill" data-shape="scallop">Cloud ☁️</button>
-            <button class="pill" data-shape="star">Star ⭐</button>
+            <button class="pill" data-shape="heart">Heart</button>
+            <button class="pill" data-shape="circle">Circle</button>
+            <button class="pill" data-shape="pill">Pill</button>
+            <button class="pill" data-shape="scallop">Soft</button>
+            <button class="pill" data-shape="star">Star</button>
           </div>
         </div>
 
-        <!-- 3. Artistic Frame Designs (15 Options) -->
         <div class="control-group">
-          <label>🎞️ 3. Artistic Frame Designs (15 Styles)</label>
-          <div class="pill-grid scrollable-pills" id="frameDesignGroup">
-            <button class="pill active" data-frame="classic">✨ Clean Pastel</button>
-            <button class="pill" data-frame="camera">📷 Vintage Camera</button>
-            <button class="pill" data-frame="wine_seal">🍷 Wine Wax Seal</button>
-            <button class="pill" data-frame="snoopy_love">💌 Cupid & Bows</button>
-            <button class="pill" data-frame="disco_pink">🪩 Disco Pink Star</button>
-            <button class="pill" data-frame="story_love">🌹 Story of Love</button>
-            <button class="pill" data-frame="news_pin">📌 Newspaper & Pin</button>
-            <button class="pill" data-frame="letter_check">📜 Letter & Gingham</button>
-            <button class="pill" data-frame="film_noir">🎞️ Classic Film Roll</button>
-            <button class="pill" data-frame="cherry_blush">🍒 Cherry Milk</button>
-            <button class="pill" data-frame="lavender_dream">☁️ Lilac Stardust</button>
-            <button class="pill" data-frame="matcha_pantry">🌿 Matcha Journal</button>
-            <button class="pill" data-frame="golden_hour">🌅 Golden Hour Journal</button>
-            <button class="pill" data-frame="teddy_hug">🧸 Bear Hug Aesthetic</button>
-            <button class="pill" data-frame="midnight_star">🌙 Midnight Starlight</button>
-          </div>
-        </div>
-
-        <!-- 4. Face Stickers & Effects -->
-        <div class="control-group">
-          <label>🎀 4. Kawaii Face Stickers</label>
+          <h2>Face stickers</h2>
           <div class="pill-grid" id="stickerGroup">
             <button class="pill active" data-sticker="none">Plain</button>
             <button class="pill" data-sticker="cat">🐱 Kitty</button>
@@ -96,41 +105,58 @@
           </div>
         </div>
 
-        <!-- 5. Aesthetic Color Filters -->
         <div class="control-group">
-          <label>🎨 5. Camera & Strip Filter</label>
+          <h2>Filter</h2>
           <div class="pill-grid" id="filterGroup">
             <button class="pill active" data-filter="none">Natural</button>
-            <button class="pill" data-filter="peach">🍑 Peachy</button>
-            <button class="pill" data-filter="strawberry">🍓 Berry</button>
-            <button class="pill" data-filter="dreamy">☁️ Dreamy</button>
-            <button class="pill" data-filter="mint">🌿 Mint</button>
-            <button class="pill" data-filter="sunset">🌅 Sunset</button>
-            <button class="pill" data-filter="vintage">🧸 Retro</button>
-            <button class="pill" data-filter="bw">🐼 Mono</button>
+            <button class="pill" data-filter="peach">Peachy</button>
+            <button class="pill" data-filter="strawberry">Berry</button>
+            <button class="pill" data-filter="dreamy">Dreamy</button>
+            <button class="pill" data-filter="mint">Mint</button>
+            <button class="pill" data-filter="sunset">Sunset</button>
+            <button class="pill" data-filter="vintage">Retro</button>
+            <button class="pill" data-filter="bw">Mono</button>
           </div>
         </div>
 
-        <!-- 6. Custom Text Caption -->
         <div class="control-group">
-          <label>✏️ 6. Strip Header Caption</label>
-          <input type="text" id="captionInput" maxlength="32" value="✨ BESTIES FOREVER ✨" placeholder="Type your custom text..." />
+          <h2><label for="captionInput">Caption</label></h2>
+          <input type="text" id="captionInput" maxlength="32" placeholder="Shown on frames with room for a caption" />
         </div>
       </section>
 
-      <!-- Right Column: Live Preview & Save/Print -->
-      <section class="card preview-card">
-        <h3>🎀 Live Strip Preview</h3>
+      <section class="panel preview-panel" aria-label="Strip preview">
+        <h2 class="preview-title">Your strip</h2>
         <div class="strip-preview-container">
           <canvas id="stripCanvas"></canvas>
         </div>
+        <p class="hint" id="stripNote" role="status"></p>
         <div class="action-buttons">
-          <button id="downloadBtn" class="btn-primary" disabled>💾 Save Strip</button>
-          <button id="printBtn" class="btn-secondary" disabled>🖨️ Print Strip</button>
+          <button id="downloadBtn" class="btn btn-primary" disabled>Save strip</button>
+          <button id="printBtn" class="btn btn-ghost" disabled>Print strip</button>
         </div>
       </section>
-    </main>
-  </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <span>Aura Studio</span>
+    <a href="tel:09105631184">Contact: 09105631184</a>
+  </footer>
+
+  <dialog id="contactDialog" class="contact-dialog" aria-labelledby="contactTitle">
+    <div class="contact-body">
+      <h2 id="contactTitle">Contact</h2>
+      <p>Call or text us at</p>
+      <p class="phone">09105631184</p>
+      <div class="contact-actions">
+        <a class="btn btn-primary" href="tel:09105631184">Call</a>
+        <a class="btn btn-ghost" href="sms:09105631184">Text</a>
+        <button class="btn btn-ghost" id="copyNumber" type="button">Copy number</button>
+      </div>
+      <button class="btn-close" type="button" data-close-contact>Close</button>
+    </div>
+  </dialog>
 
   <script src="app.js"></script>
 </body>

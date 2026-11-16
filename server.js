@@ -3,9 +3,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// This line serves your public folder correctly
+// Serves everything in /public (index.html, style.css, app.js)
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(PORT, () => {
-  console.log(`✨ Aura Studio live on port ${PORT}`);
+  console.log(`Aura Studio live on port ${PORT}`);
 });
