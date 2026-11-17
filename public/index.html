@@ -23,13 +23,13 @@
     <section class="hero">
       <div class="hero-copy">
         <h1>Pose, pick a frame, keep the strip.</h1>
-        <p class="lead">Aura Studio is a photobooth that runs in your browser. Choose a scrapbook frame, add a face sticker and a filter, then save or print your strip. Your photos stay on your device.</p>
+        <p class="lead">Aura Studio is a photobooth that runs in your browser. Choose a scrapbook frame, add a face filter and a color filter, then save or print your strip. Your photos stay on your device.</p>
         <div class="hero-actions">
           <button class="btn btn-primary" data-go="booth">Open the photobooth</button>
           <button class="btn btn-ghost" data-contact>Contact</button>
         </div>
         <ol class="steps">
-          <li><strong>Pick a frame</strong><span>Eight scrapbook layouts and eight classic strips.</span></li>
+          <li><strong>Pick a frame</strong><span>24 scrapbook frames plus 8 classic strips.</span></li>
           <li><strong>Strike a pose</strong><span>A 3-2-1 countdown snaps each cut for you.</span></li>
           <li><strong>Save or print</strong><span>Download a PNG or send it to your printer.</span></li>
         </ol>
@@ -48,11 +48,13 @@
         <div class="polaroid">
           <div class="camera-wrapper" id="cameraWrapper">
             <video id="video" autoplay playsinline muted></video>
+            <div id="tint" class="tint"></div>
             <canvas id="overlayCanvas"></canvas>
             <div id="countdown" class="countdown hidden" role="status" aria-live="assertive">3</div>
             <div id="flash" class="flash"></div>
           </div>
           <p id="cameraMsg" class="camera-msg hidden" role="alert"></p>
+          <p id="faceStatus" class="hint face-status" role="status"></p>
           <div class="camera-controls">
             <button id="startBtn" class="btn btn-primary">Start photo session</button>
             <button id="retakeBtn" class="btn btn-ghost hidden">Retake photos</button>
@@ -92,17 +94,25 @@
         </div>
 
         <div class="control-group">
-          <h2>Face stickers</h2>
-          <div class="pill-grid" id="stickerGroup">
-            <button class="pill active" data-sticker="none">Plain</button>
-            <button class="pill" data-sticker="cat">🐱 Kitty</button>
-            <button class="pill" data-sticker="bunny">🐰 Bunny</button>
-            <button class="pill" data-sticker="bear">🧸 Teddy</button>
-            <button class="pill" data-sticker="blush">🌸 Blush</button>
-            <button class="pill" data-sticker="crown">👑 Tiara</button>
-            <button class="pill" data-sticker="bow">🎀 Bow</button>
-            <button class="pill" data-sticker="sparkles">✨ Sparkles</button>
+          <h2>Face filters</h2>
+          <div class="pill-grid" id="faceGroup">
+            <button class="pill active" data-face="none">None</button>
+            <button class="pill" data-face="puppy">Puppy</button>
+            <button class="pill" data-face="nerd_pup">Nerd Pup</button>
+            <button class="pill" data-face="kitty_glasses">Kitty Glasses</button>
+            <button class="pill" data-face="cat">Cat Ears</button>
+            <button class="pill" data-face="bunny">Bunny</button>
+            <button class="pill" data-face="bear">Teddy</button>
+            <button class="pill" data-face="flower_crown">Flower Crown</button>
+            <button class="pill" data-face="tiara">Tiara</button>
+            <button class="pill" data-face="heart_eyes">Heart Eyes</button>
+            <button class="pill" data-face="sunnies">Sunnies</button>
+            <button class="pill" data-face="mustache">Mustache</button>
+            <button class="pill" data-face="blush">Blush</button>
+            <button class="pill" data-face="halo">Halo</button>
+            <button class="pill" data-face="devil">Devil Horns</button>
           </div>
+          <p class="hint">Filters follow your eyes, nose and mouth. Try opening your mouth with Puppy.</p>
         </div>
 
         <div class="control-group">
@@ -115,7 +125,15 @@
             <button class="pill" data-filter="mint">Mint</button>
             <button class="pill" data-filter="sunset">Sunset</button>
             <button class="pill" data-filter="vintage">Retro</button>
+            <button class="pill" data-filter="golden">Golden</button>
+            <button class="pill" data-filter="rose">Rosy</button>
+            <button class="pill" data-filter="cool">Cool</button>
+            <button class="pill" data-filter="vivid">Vivid</button>
+            <button class="pill" data-filter="sepia">Sepia</button>
             <button class="pill" data-filter="bw">Mono</button>
+            <button class="pill" data-filter="noir">Noir</button>
+            <button class="pill" data-filter="halftone">Halftone</button>
+            <button class="pill" data-filter="pop">Pop dots</button>
           </div>
         </div>
 

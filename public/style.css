@@ -174,12 +174,14 @@ button { cursor: pointer; }
   transform: rotate(-.6deg);
 }
 
-.camera-wrapper { position: relative; width: 100%; aspect-ratio: 4 / 3; background: #1a0a0d; overflow: hidden; }
+.camera-wrapper { position: relative; width: 100%; aspect-ratio: 4 / 3; max-height: 72vh; background: #1a0a0d; overflow: hidden; }
 
 video, #overlayCanvas {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);
 }
-#overlayCanvas { pointer-events: none; }
+#overlayCanvas { pointer-events: none; object-fit: cover; }
+.tint { position: absolute; inset: 0; pointer-events: none; }
+.face-status { margin-top: 10px; text-align: center; min-height: 1.3em; }
 
 .countdown {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -223,7 +225,7 @@ video, #overlayCanvas {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  max-height: 330px;
+  max-height: 380px;
   overflow-y: auto;
   padding: 4px;
 }
